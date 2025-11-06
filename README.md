@@ -143,6 +143,54 @@ aethelgard-saga-python/
 
 ---
 
+## 🔒 Code Execution Sandbox (Pyodide)
+
+**Security Constraints:**
+- ⏱️ **Timeout:** 5 seconds maximum per code example
+- 💾 **Memory:** 50 MB limit per execution
+- 🌐 **Network:** No network access allowed
+- 📁 **File System:** Read-only, no write access
+- 📦 **Approved Libraries Only:**
+  - core-python (built-ins)
+  - numpy, pandas (data)
+  - matplotlib, seaborn (visualization)
+  - scikit-learn (ML)
+
+**Rationale:** Secure execution in browser via WebAssembly (Pyodide). Prevents malicious code, ensures reproducibility.
+
+**Gate Enforcement:** `exec_ok` gate fails if any code example times out, exceeds memory, or imports unapproved library.
+
+---
+
+## 📖 Web Citation Allowlist
+
+**Pre-Approved Citation Sources:**
+
+**Official/Academic:**
+- docs.python.org (PSF License)
+- ocw.mit.edu (MIT OpenCourseWare, CC BY-NC-SA)
+- www.cmu.edu (Carnegie Mellon University)
+- www.credentialingexcellence.org (ICE/NOCA certification standards)
+
+**Community/Professional:**
+- realpython.com (Python tutorials)
+- stackoverflow.com (Q&A community)
+- github.com (open source code)
+- medium.com (technical articles)
+- questandcrossfire.com (internal brand domain)
+
+**Escalation Process (for non-allowlisted sources):**
+1. Quality Checker flags non-allowlisted citation
+2. Manual review by senior engineer (1-3 days)
+3. Approval decision (approve/reject with rationale)
+4. If approved, domain added to allowlist
+
+**Rationale:** Ensures citation quality, prevents unreliable sources, maintains academic standards.
+
+**Gate Enforcement:** `citation_density` gate checks both quantity (≥1.0) and quality (allowlist compliance).
+
+---
+
 ## 🔐 Authentication
 
 **Bearer Token Required:** All API endpoints require `Authorization: Bearer <API_KEY>` header.
