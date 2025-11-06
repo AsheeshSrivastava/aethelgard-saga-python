@@ -491,7 +491,7 @@ Research Portal → Quality Checker → Backend → AXIS AI
 2. **Research Portal sends to Quality Checker**
    - POST /api/v1/content/validate
    - Verify QualityReport received
-   - Check overall_score >= 70
+   - Check overall_score >= 85
 
 3. **Research Portal sends to Backend** (if passed)
    - POST to Backend storage endpoint

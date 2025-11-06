@@ -28,7 +28,7 @@ I'll tell you: "Contracts are ready!"
 
 ```
 "I'm building Research Portal and AXIS AI.
-Use THESE EXACT models (PythonConcept, Question, QualityReport).
+Use THESE EXACT models (AethelgardConcept, Question, QualityReport).
 Do not create your own data structures.
 Import from: contracts/shared_models.py"
 ```
@@ -59,7 +59,7 @@ contracts/
 ### `shared_models.py` ⭐ MOST IMPORTANT
 
 **Contains:**
-- `PythonConcept` - Data structure for Python concepts
+- `AethelgardConcept` - Data structure for Python concepts
 - `Question` - Data structure for questions
 - `QualityReport` - Data structure for validation results
 - `ValidationRequest/Response` - API request/response formats
@@ -95,7 +95,7 @@ contracts/
 **What**: Specific rules for each system connection
 
 **Example:** `api_research_portal.py` says:
-- Research Portal sends `PythonConcept` to endpoint `/api/validate-content`
+- Research Portal sends `AethelgardConcept` to endpoint `/api/validate-content`
 - Quality Checker returns `QualityReport`
 - If error, returns `ErrorResponse`
 
@@ -110,12 +110,12 @@ contracts/
 **ChatGPT building Research Portal:**
 ```python
 # ChatGPT's code
-from contracts.shared_models import PythonConcept, QualityReport
+from contracts.shared_models import AethelgardConcept, QualityReport
 import requests
 
-def generate_concept() -> PythonConcept:
+def generate_concept() -> AethelgardConcept:
     # ... generation logic ...
-    concept = PythonConcept(
+    concept = AethelgardConcept(
         concept_id="python-variables-01",
         title="Variables",
         problem="How do you store data?",
@@ -128,7 +128,7 @@ def generate_concept() -> PythonConcept:
     )
     return concept
 
-def validate_concept(concept: PythonConcept) -> QualityReport:
+def validate_concept(concept: AethelgardConcept) -> QualityReport:
     import uuid
     response = requests.post(
         "http://localhost:8000/api/v1/content/validate",
@@ -146,13 +146,13 @@ def validate_concept(concept: PythonConcept) -> QualityReport:
 **My code (Quality Checker):**
 ```python
 # Claude's code (Production v2.0)
-from contracts.shared_models import PythonConcept, QualityReport, QualityGate, Telemetry, SuccessResponse
+from contracts.shared_models import AethelgardConcept, QualityReport, QualityGate, Telemetry, SuccessResponse
 from fastapi import FastAPI
 
 app = FastAPI()
 
 @app.post("/api/v1/content/validate", response_model=SuccessResponse)
-def validate_content(concept: PythonConcept):
+def validate_content(concept: AethelgardConcept):
     # ... validation logic with 10-criterion rubric ...
 
     # 10 criteria scoring

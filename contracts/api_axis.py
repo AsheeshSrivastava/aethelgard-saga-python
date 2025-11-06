@@ -69,7 +69,8 @@ def get_concept(concept_id: str) -> Dict[str, Any]:
     """
     response = requests.get(
         f"{BASE_URL}/api/v1/content/{concept_id}",
-        headers={"Authorization": f"Bearer {AXIS_API_KEY}"}
+        headers={"Authorization": f"Bearer {AXIS_API_KEY}"},
+        timeout=10  # Prevent hanging connections
     )
     return response.json()
 
@@ -116,7 +117,8 @@ def list_concepts(
     response = requests.get(
         f"{BASE_URL}/api/v1/content/list",
         params=params,
-        headers={"Authorization": f"Bearer {AXIS_API_KEY}"}
+        headers={"Authorization": f"Bearer {AXIS_API_KEY}"},
+        timeout=10  # Prevent hanging connections
     )
     return response.json()
 
@@ -143,7 +145,8 @@ def search_concepts(query: str, limit: int = 5) -> Dict[str, Any]:
     response = requests.get(
         f"{BASE_URL}/api/v1/content/search",
         params={"q": query, "limit": limit},
-        headers={"Authorization": f"Bearer {AXIS_API_KEY}"}
+        headers={"Authorization": f"Bearer {AXIS_API_KEY}"},
+        timeout=10  # Prevent hanging connections
     )
     return response.json()
 
@@ -169,7 +172,8 @@ def get_questions_for_concept(concept_id: str) -> Dict[str, Any]:
     """
     response = requests.get(
         f"{BASE_URL}/api/v1/questions/{concept_id}",
-        headers={"Authorization": f"Bearer {AXIS_API_KEY}"}
+        headers={"Authorization": f"Bearer {AXIS_API_KEY}"},
+        timeout=10  # Prevent hanging connections
     )
     return response.json()
 
@@ -202,7 +206,8 @@ def get_random_question(
     response = requests.get(
         f"{BASE_URL}/api/v1/questions/random",
         params=params,
-        headers={"Authorization": f"Bearer {AXIS_API_KEY}"}
+        headers={"Authorization": f"Bearer {AXIS_API_KEY}"},
+        timeout=10  # Prevent hanging connections
     )
     return response.json()
 
@@ -230,7 +235,8 @@ def get_prerequisites(concept_id: str) -> Dict[str, Any]:
     """
     response = requests.get(
         f"{BASE_URL}/api/v1/content/{concept_id}/prerequisites",
-        headers={"Authorization": f"Bearer {AXIS_API_KEY}"}
+        headers={"Authorization": f"Bearer {AXIS_API_KEY}"},
+        timeout=10  # Prevent hanging connections
     )
     return response.json()
 
@@ -254,7 +260,8 @@ def get_next_concepts(concept_id: str) -> Dict[str, Any]:
     """
     response = requests.get(
         f"{BASE_URL}/api/v1/content/{concept_id}/next",
-        headers={"Authorization": f"Bearer {AXIS_API_KEY}"}
+        headers={"Authorization": f"Bearer {AXIS_API_KEY}"},
+        timeout=10  # Prevent hanging connections
     )
     return response.json()
 
@@ -537,6 +544,10 @@ Response: 429 Too Many Requests
     "code": 429,
     "retry_after": 60
 }
+Headers:
+    Retry-After: 60  // Seconds until rate limit resets
+
+Note: Client should respect Retry-After header and implement exponential backoff.
 
 ERROR 4: No Results for Search
 Request: GET /api/v1/content/search?q=quantum physics

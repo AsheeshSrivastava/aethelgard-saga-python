@@ -89,7 +89,8 @@ def validate_content(concept: AethelgardConcept, idempotency_key: str = None) ->
             "Content-Type": "application/json",
             "Authorization": f"Bearer {RESEARCH_PORTAL_API_KEY}",
             "Idempotency-Key": idempotency_key
-        }
+        },
+        timeout=10  # Prevent hanging connections
     )
     return response.json()
 
@@ -427,6 +428,20 @@ Response: 200 OK (not error, but passes_quality=false)
         "passes_quality": false  // overall_score < 85 OR gate failed
     }
 }
+
+ERROR 7: Rate Limit Exceeded
+Request: Too many requests from client
+Response: 429 Too Many Requests
+{
+    "status": "error",
+    "error": "Rate limit exceeded",
+    "details": "Maximum 100 requests per hour exceeded",
+    "code": 429
+}
+Headers:
+    Retry-After: 3600  // Seconds until rate limit resets
+
+Note: Client should respect Retry-After header and implement exponential backoff.
 """
 
 # ============================================================================

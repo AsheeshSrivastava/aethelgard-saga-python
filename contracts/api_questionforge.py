@@ -82,7 +82,8 @@ def validate_question(question: Question, idempotency_key: str = None) -> Dict[s
             "Content-Type": "application/json",
             "Authorization": f"Bearer {QUESTIONFORGE_API_KEY}",
             "Idempotency-Key": idempotency_key
-        }
+        },
+        timeout=10  # Prevent hanging connections
     )
     return response.json()
 
@@ -115,6 +116,7 @@ def validate_question(question: Question, idempotency_key: str = None) -> Dict[s
         "people_first_language_score": 2,      // 2 pts max - Important
 
         // Quality Gates (adapted for questions)
+        // NOTE: For questions, citation gate passes if (a) no explanation field OR (b) explanation has ≥1 allowlisted citation. citation_density is telemetry only.
         "gates": [
             {"name": "coverage_score", "passed": true, "details": "Question covers concept adequately"},
             {"name": "citation_density", "passed": true, "details": "Explanation cites concept (if applicable)"},
@@ -465,6 +467,20 @@ Response: 200 OK (not error, but passes_quality=false)
         "passes_quality": false  // overall_score < 85 OR gate failed
     }
 }
+
+ERROR 7: Rate Limit Exceeded
+Request: Too many requests from client
+Response: 429 Too Many Requests
+{
+    "status": "error",
+    "error": "Rate limit exceeded",
+    "details": "Maximum 100 requests per hour exceeded",
+    "code": 429
+}
+Headers:
+    Retry-After: 3600  // Seconds until rate limit resets
+
+Note: Client should respect Retry-After header and implement exponential backoff.
 """
 
 # ============================================================================

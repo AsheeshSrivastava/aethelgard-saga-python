@@ -83,7 +83,8 @@ def batch_validate(items: List[AethelgardConcept | Question], idempotency_key: s
             "Content-Type": "application/json",
             "Authorization": f"Bearer {BACKEND_API_KEY}",
             "Idempotency-Key": idempotency_key
-        }
+        },
+        timeout=10  # Prevent hanging connections
     )
     return response.json()
 
@@ -627,6 +628,20 @@ Response: 200 OK (not error, but passes_quality=false)
         ]
     }
 }
+
+ERROR 6: Rate Limit Exceeded
+Request: Too many requests from client
+Response: 429 Too Many Requests
+{
+    "status": "error",
+    "error": "Rate limit exceeded",
+    "details": "Maximum 100 requests per hour exceeded",
+    "code": 429
+}
+Headers:
+    Retry-After: 3600  // Seconds until rate limit resets
+
+Note: Client should respect Retry-After header and implement exponential backoff.
 """
 
 # ============================================================================
