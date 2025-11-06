@@ -129,40 +129,100 @@ def generate_concept() -> PythonConcept:
     return concept
 
 def validate_concept(concept: PythonConcept) -> QualityReport:
+    import uuid
     response = requests.post(
-        "http://localhost:8000/api/validate-content",
-        json=concept.dict()
+        "http://localhost:8000/api/v1/content/validate",
+        json=concept.model_dump(),
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {RESEARCH_PORTAL_API_KEY}",
+            "Idempotency-Key": str(uuid.uuid4())
+        }
     )
-    return QualityReport(**response.json())
+    data = response.json()['data']  # Extract from SuccessResponse
+    return QualityReport(**data)
 ```
 
 **My code (Quality Checker):**
 ```python
-# Claude's code
-from contracts.shared_models import PythonConcept, QualityReport
+# Claude's code (Production v2.0)
+from contracts.shared_models import PythonConcept, QualityReport, QualityGate, Telemetry, SuccessResponse
 from fastapi import FastAPI
 
 app = FastAPI()
 
-@app.post("/api/validate-content", response_model=QualityReport)
+@app.post("/api/v1/content/validate", response_model=SuccessResponse)
 def validate_content(concept: PythonConcept):
-    # ... validation logic ...
-    return QualityReport(
+    # ... validation logic with 10-criterion rubric ...
+
+    # 10 criteria scoring
+    groundedness_citation = 18  # /20
+    technical_correctness = 14  # /15
+    people_first_pedagogy = 13  # /15
+    psw_actionability = 9       # /10
+    mode_fidelity = 9           # /10
+    self_paced_scaffolding = 9  # /10
+    retrieval_quality = 9       # /10
+    clarity = 4                 # /5
+    bloom_alignment = 3         # /3
+    people_first_language = 2   # /2
+
+    overall_score = sum([...])  # = 90
+
+    # 4 quality gates (must ALL pass)
+    gates = [
+        QualityGate(name="coverage_score", threshold=0.65, actual=0.75, passed=True),
+        QualityGate(name="citation_density", threshold=1.0, actual=1.5, passed=True),
+        QualityGate(name="exec_ok", threshold=True, actual=True, passed=True),
+        QualityGate(name="scope_ok", threshold=True, actual=True, passed=True)
+    ]
+
+    # Pass logic: score ≥85 AND all gates passed
+    passes_quality = (overall_score >= 85) and all([g.passed for g in gates])
+
+    # Telemetry (14 metrics tracked)
+    telemetry = Telemetry(
+        run_id="run_abc123",
+        model="gpt-4o-latest",
+        provider="openai",
+        prompt_version="v2.0",
+        graph_version="1.0",
+        coverage_score=0.75,
+        citation_density=1.5,
+        unique_sources=2,
+        mode_ratio=0.8,
+        scaffold_depth=3,
+        exec_ok=True,
+        latency_ms=2500,
+        tokens=3200
+    )
+
+    quality_report = QualityReport(
         item_id=concept.concept_id,
         item_type="content",
-        overall_score=85,
-        psw_score=28,
-        code_quality_score=27,
-        clarity_score=14,
-        adult_learning_score=12,
-        people_first_score=9,
-        rag_optimization_score=18,
+        overall_score=overall_score,
+        criterion_scores={
+            "groundedness_citation": groundedness_citation,
+            "technical_correctness": technical_correctness,
+            "people_first_pedagogy": people_first_pedagogy,
+            "psw_actionability": psw_actionability,
+            "mode_fidelity": mode_fidelity,
+            "self_paced_scaffolding": self_paced_scaffolding,
+            "retrieval_quality": retrieval_quality,
+            "clarity": clarity,
+            "bloom_alignment": bloom_alignment,
+            "people_first_language": people_first_language
+        },
+        gates=gates,
+        telemetry=telemetry,
         issues=[],
-        strengths=["Clear PSW structure"],
-        suggestions=["Add more examples"],
-        passes_quality=True,
+        strengths=["Clear PSW structure", "Excellent code examples"],
+        suggestions=["Add more real-world applications"],
+        passes_quality=passes_quality,
         validated_at="2025-11-08T10:30:00Z"
     )
+
+    return SuccessResponse(data=quality_report)
 ```
 
 **Result**: They plug together perfectly! No integration errors.
@@ -178,6 +238,69 @@ You don't do anything special. Systems just work because they follow the same co
 2. Check if endpoint URLs match
 3. Ask me: "Claude, Research Portal is calling `/validate` but Quality Checker expects `/api/validate-content`. Fix?"
 4. I fix it in 2 minutes
+
+---
+
+## Quality Framework v2.0 (Simple Explanation)
+
+**What Changed**: Claude upgraded Quality Checker to production-grade standards.
+
+**3 Key Things to Know:**
+
+### 1. 10-Criterion Rubric (Total: 100 points)
+
+Quality Checker evaluates content on 10 criteria:
+- **Groundedness & Citation** (20 points) - Cited sources, accurate references
+- **Technical Correctness** (15 points) - Code works, no errors
+- **People-First Pedagogy** (15 points) - Learner-friendly, self-paced
+- **PSW Actionability** (10 points) - Problem-System-Win framework
+- **Mode Fidelity** (10 points) - Coach/Hybrid/Socratic alignment
+- **Self-Paced Scaffolding** (10 points) - Progressive complexity
+- **Retrieval Quality** (10 points) - RAG search effectiveness
+- **Clarity** (5 points) - Easy to understand
+- **Bloom Alignment** (3 points) - Cognitive level appropriate
+- **People-First Language** (2 points) - Encouraging, inclusive
+
+**Pass Threshold**: ≥85 points (raised from 70)
+
+### 2. 4 Quality Gates (Must ALL Pass)
+
+Even if content scores 90 points, it FAILS if any gate fails:
+- **coverage_score ≥0.65** - RAG retrieval quality threshold
+- **citation_density ≥1.0** - Minimum 1 citation per concept
+- **exec_ok = true** - All code examples execute successfully
+- **scope_ok = true** - Only approved libraries used (numpy, pandas, matplotlib, seaborn, scikit-learn)
+
+**Example**: Content scores 90 but uses `import requests` (unapproved) → FAILS (scope_ok gate failed)
+
+### 3. Telemetry (14 Metrics Tracked)
+
+Every validation includes telemetry for observability:
+- Run metadata (run_id, model, provider, prompt_version)
+- Quality metrics (coverage_score, citation_density, unique_sources)
+- Pedagogy metrics (mode_ratio, scaffold_depth, exec_ok)
+- Performance metrics (latency_ms, tokens)
+
+**You don't need to do anything** - Quality Checker handles this automatically.
+
+### Code Sandbox Constraints
+
+All code examples run in secure Pyodide sandbox:
+- **Timeout**: 5 seconds max per example
+- **Memory**: 50 MB limit
+- **No network access** - No HTTP requests allowed
+- **No file writes** - Read-only environment
+- **Approved libraries only** - core-python, numpy, pandas, matplotlib, seaborn, scikit-learn
+
+### Web Citation Allowlist
+
+Pre-approved citation sources:
+- docs.python.org, ocw.mit.edu, www.cmu.edu (academic/official)
+- realpython.com, stackoverflow.com, github.com, medium.com (community)
+
+Non-allowlisted sources flagged for manual review (1-3 day approval process).
+
+**Bottom Line**: Quality Checker is now production-grade. Content must meet higher standards, but integration works the same way.
 
 ---
 

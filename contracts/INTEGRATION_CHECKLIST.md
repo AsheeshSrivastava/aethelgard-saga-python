@@ -76,8 +76,8 @@
 
 **Quality Checker:**
 - [ ] FastAPI application running
-- [ ] Content validation service (7 criteria)
-- [ ] Question validation service (7 criteria)
+- [ ] Content validation service (10-criterion rubric, pass ≥85)
+- [ ] Question validation service (7-8 criteria, type-dependent)
 - [ ] Batch validation service
 - [ ] QualityReport generation working
 - [ ] Gradio UI for manual testing
@@ -250,7 +250,12 @@ curl http://localhost:9000/api/v1/content/test-001
    ```python
    response = requests.post(
        "http://localhost:8000/api/v1/content/validate",
-       json=concept.dict()
+       json=concept.model_dump(),
+       headers={
+           "Content-Type": "application/json",
+           "Authorization": f"Bearer {RESEARCH_PORTAL_API_KEY}",
+           "Idempotency-Key": str(uuid.uuid4())
+       }
    )
    ```
 5. Verify response format matches SuccessResponse
@@ -296,7 +301,12 @@ curl http://localhost:9000/api/v1/content/test-001
    ```python
    response = requests.post(
        "http://localhost:8000/api/v1/questions/validate",
-       json=question.dict()
+       json=question.model_dump(),
+       headers={
+           "Content-Type": "application/json",
+           "Authorization": f"Bearer {QUESTIONFORGE_API_KEY}",
+           "Idempotency-Key": str(uuid.uuid4())
+       }
    )
    ```
 5. Verify QualityReport received
@@ -342,7 +352,12 @@ curl http://localhost:9000/api/v1/content/test-001
    )
    response = requests.post(
        "http://localhost:8000/api/v1/content/batch-validate",
-       json=batch_request.dict()
+       json=batch_request.model_dump(),
+       headers={
+           "Content-Type": "application/json",
+           "Authorization": f"Bearer {BACKEND_API_KEY}",
+           "Idempotency-Key": str(uuid.uuid4())
+       }
    )
    ```
 5. Verify BatchValidationResponse received
@@ -724,7 +739,12 @@ start = time.time()
 for concept in concepts:
     response = requests.post(
         "http://localhost:8000/api/v1/content/validate",
-        json=concept.dict()
+        json=concept.model_dump(),
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {RESEARCH_PORTAL_API_KEY}",
+            "Idempotency-Key": str(uuid.uuid4())
+        }
     )
 
 end = time.time()
@@ -777,6 +797,169 @@ print(f"{len(results)} concurrent users handled successfully")
 ```
 
 **Expected:** All 50 users served, no crashes
+
+---
+
+## 🔐 PRODUCTION-GRADE QUALITY FRAMEWORK VERIFICATION
+
+### Quality Checker v2.0 Specifications
+
+Before marking integration complete, verify Quality Checker implements locked production specifications:
+
+#### 10-Criterion Rubric Verification
+
+**Checklist:**
+- [ ] **Groundedness & Citation (20 points):** Verified via citation_density gate and citation source validation
+- [ ] **Technical Correctness (15 points):** Verified via exec_ok gate and test case validation
+- [ ] **People-First Pedagogy (15 points):** Adult learning principles, experiential focus, self-paced scaffolding
+- [ ] **PSW Actionability (10 points):** Problem-System-Win framework completeness
+- [ ] **Mode Fidelity (10 points):** Coach/Hybrid/Socratic mode alignment
+- [ ] **Self-Paced Scaffolding (10 points):** Progressive complexity, prerequisites verified
+- [ ] **Retrieval Quality (10 points):** Verified via coverage_score gate (≥0.65)
+- [ ] **Clarity (5 points):** Readability, code comments, structure
+- [ ] **Bloom Alignment (3 points):** Cognitive level appropriate for difficulty
+- [ ] **People-First Language (2 points):** Inclusive, encouraging, growth-mindset
+
+**Pass Logic Verification:**
+```python
+# Quality Checker must implement exactly:
+passes_quality = (overall_score >= 85) AND all([gate.passed for gate in gates])
+```
+
+**Test:**
+- [ ] Send concept with overall_score = 90 but coverage_score = 0.60 → Should FAIL (gate failed)
+- [ ] Send concept with overall_score = 84 and all gates passed → Should FAIL (score < 85)
+- [ ] Send concept with overall_score = 85 and all gates passed → Should PASS
+
+---
+
+#### 4 Quality Gates Enforcement
+
+**Gates must be enforced (not advisory):**
+
+1. **coverage_score Gate (≥0.65):**
+   - [ ] RAG retrieval quality measured
+   - [ ] Retrieved context relevance verified
+   - [ ] Gate failure triggers retry with tighter retrieval
+   - [ ] Second failure → helpful decline with citations
+
+2. **citation_density Gate (≥1.0):**
+   - [ ] Minimum 1 citation per concept required
+   - [ ] Citations parsed and validated
+   - [ ] Allowlisted domains verified
+   - [ ] Non-allowlisted domains flagged
+
+3. **exec_ok Gate (true):**
+   - [ ] All code examples executed in Pyodide sandbox
+   - [ ] Timeout: 5 seconds per example
+   - [ ] Memory: 50 MB limit
+   - [ ] Expected output validated
+   - [ ] One failure → entire gate fails
+
+4. **scope_ok Gate (true):**
+   - [ ] Only approved libraries allowed (core-python, numpy, pandas, matplotlib, seaborn, scikit-learn)
+   - [ ] Import statements parsed and validated
+   - [ ] Unapproved libraries rejected
+
+**Test:**
+- [ ] Concept with exec_ok=false → Should fail validation
+- [ ] Concept using `requests` library → Should fail scope_ok gate
+- [ ] Concept with no citations → Should fail citation_density gate
+- [ ] Concept with coverage_score=0.50 → Should fail coverage_score gate
+
+---
+
+#### 14 Telemetry Metrics
+
+**All success responses must include telemetry object:**
+
+**Verify presence of all 14 metrics:**
+- [ ] **run_id** (str) - Unique run identifier
+- [ ] **trace_url** (Optional[str]) - LangSmith trace link
+- [ ] **model** (str) - LLM model used
+- [ ] **provider** (str) - LLM provider
+- [ ] **prompt_version** (str) - Prompt template version
+- [ ] **graph_version** (str) - LangGraph version
+- [ ] **coverage_score** (float, 0.0-1.0) - RAG retrieval quality
+- [ ] **citation_density** (float, ≥0.0) - Citations per concept
+- [ ] **unique_sources** (int, ≥0) - Number of unique citation sources
+- [ ] **mode_ratio** (float, 0.0-1.0) - Mode-specific content ratio
+- [ ] **scaffold_depth** (int, ≥0) - Scaffolding levels
+- [ ] **exec_ok** (bool) - Code execution success
+- [ ] **latency_ms** (int, ≥0) - Validation time in milliseconds
+- [ ] **tokens** (int, ≥0) - Token count
+
+**Test:**
+```python
+response = requests.post(
+    "http://localhost:8000/api/v1/content/validate",
+    json=concept.model_dump(),
+    headers={
+        "Authorization": f"Bearer {API_KEY}",
+        "Idempotency-Key": str(uuid.uuid4())
+    }
+)
+data = response.json()['data']
+telemetry = data['telemetry']
+
+# Verify all 14 metrics present
+assert 'run_id' in telemetry
+assert 'trace_url' in telemetry
+assert 'model' in telemetry
+# ... (verify all 14)
+```
+
+---
+
+#### Code Sandbox Constraints
+
+**Pyodide execution environment must enforce:**
+
+- [ ] **Timeout:** 5 seconds max per code example
+- [ ] **Memory:** 50 MB limit per example
+- [ ] **Network:** No network access allowed
+- [ ] **File System:** No write access allowed
+- [ ] **Approved Libraries Only:** core-python, numpy, pandas, matplotlib, seaborn, scikit-learn
+- [ ] **Library Enforcement:** Import statements validated, unapproved libraries rejected
+
+**Test:**
+- [ ] Code with infinite loop → Should timeout after 5 seconds
+- [ ] Code with large array allocation → Should fail if exceeds 50 MB
+- [ ] Code with `import requests` → Should fail scope_ok gate
+- [ ] Code with `open('file.txt', 'w')` → Should fail if executed
+
+---
+
+#### Web Citation Allowlist Policy
+
+**Citation source validation must:**
+
+**Pre-approved Domains:**
+- [ ] docs.python.org (PSF License)
+- [ ] ocw.mit.edu (CC BY-NC-SA)
+- [ ] www.cmu.edu
+- [ ] www.credentialingexcellence.org
+- [ ] realpython.com
+- [ ] stackoverflow.com (CC BY-SA)
+- [ ] github.com (check individual licenses)
+- [ ] medium.com (check author permissions)
+
+**Enforcement:**
+- [ ] Citations parsed and URLs extracted
+- [ ] Domain checked against allowlist
+- [ ] Non-allowlisted domains flagged in QualityReport.issues[]
+- [ ] Flagged citations temporarily removed from citation_density calculation
+
+**Escalation Process:**
+- [ ] Step 1: Quality Checker detects non-allowlisted URL
+- [ ] Step 2: Research Portal receives flagged citation in QualityReport
+- [ ] Step 3: Manual allowlist addition request to Asheesh (1-3 business days)
+- [ ] Step 4: Approved sources added to SYSTEM_ARCHITECTURE.md
+
+**Test:**
+- [ ] Citation from docs.python.org → Should auto-accept
+- [ ] Citation from random-blog.com → Should flag for review
+- [ ] Concept with only non-allowlisted citations → citation_density may fail
 
 ---
 
@@ -845,7 +1028,7 @@ When integration fails:
    ```python
    # Print exact JSON being sent
    import json
-   print(json.dumps(concept.dict(), indent=2))
+   print(json.dumps(concept.model_dump(), indent=2))
 
    # Compare with shared_models.py
    ```

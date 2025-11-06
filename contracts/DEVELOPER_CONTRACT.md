@@ -572,6 +572,78 @@ RESEARCH_PORTAL_API_KEY = os.getenv(
 
 ---
 
+## 🔒 Code Sandbox Constraints
+
+**All code examples executed in Pyodide sandbox:**
+
+**Timeout:**
+- Maximum execution time: **5 seconds** per code example
+- Prevents infinite loops
+- Exceeded timeout = exec_ok gate failure
+
+**Memory:**
+- Maximum memory allocation: **50 MB** per code example
+- Memory errors = exec_ok gate failure
+
+**Network:**
+- **No network access** allowed in sandbox
+- No HTTP requests, API calls, or external connections
+- Network attempts = exec_ok gate failure
+
+**File System:**
+- No file system write access
+- No file uploads or downloads
+- File operations = exec_ok gate failure
+
+**Approved Libraries:**
+- **core-python:** Python standard library
+- **numpy:** Numerical computing
+- **pandas:** Data manipulation
+- **matplotlib:** Data visualization
+- **seaborn:** Statistical visualization
+- **scikit-learn:** Machine learning
+
+**Library Enforcement:**
+- scope_ok gate rejects unapproved libraries
+- Import statements parsed and validated
+- Research Portal must stay within approved scope
+
+---
+
+## 📚 Web Citation Allowlist Policy
+
+**Pre-approved Citation Sources:**
+
+**Academic & Educational:**
+- docs.python.org (PSF License)
+- ocw.mit.edu (CC BY-NC-SA)
+- www.cmu.edu (educational materials)
+- www.credentialingexcellence.org
+
+**Community & Reference:**
+- realpython.com
+- stackoverflow.com (CC BY-SA)
+- github.com (check individual licenses)
+- medium.com (check author permissions)
+
+**Citation Requirements:**
+- All citations must include: source, title, locator, url, license
+- citation_density gate requires ≥1.0 citations per concept
+- License compatibility must be verified
+
+**Allowlist Enforcement:**
+- Quality Checker validates URLs against allowlist
+- Non-allowlisted domains flagged for manual review
+- Flagged citations temporarily removed from citation_density calculation
+
+**Escalation for New Sources:**
+1. Quality Checker detects non-allowlisted URL
+2. Research Portal reviews source quality/license
+3. Submit to Asheesh for approval (1-3 business days)
+4. Approved sources added to allowlist
+
+---
+
 ## 📁 File Structure Agreement
 
 **Both follow this structure:**

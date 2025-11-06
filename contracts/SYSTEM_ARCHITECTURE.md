@@ -449,7 +449,7 @@ Idempotency-Key: <UUID>  # Cache TTL: 24 hours
 **Pass Criteria:**
 - Overall score ≥85 (raised from 70) AND all core gates passed
 
-**Telemetry Object (9+ metrics tracked via LangSmith):**
+**Telemetry Object (14 metrics tracked via LangSmith):**
 
 | Metric | Type | Description |
 |--------|------|-------------|
@@ -903,6 +903,145 @@ Idempotency-Key: <UUID>  # Optional, auto-generated if not provided
 - Quality Checker: 100 validations/minute per API key
 - Backend: 100 requests/minute for AXIS AI
 - Research Portal: No limit (internal system)
+
+---
+
+## 🔒 CODE SANDBOX CONSTRAINTS
+
+### Pyodide Execution Environment
+
+All code examples are executed in a **Pyodide sandbox** for security and reliability:
+
+**Timeout Constraints:**
+- Maximum execution time: **5 seconds** per code example
+- Prevents infinite loops and runaway processes
+- Exceeded timeout = exec_ok gate failure
+
+**Memory Constraints:**
+- Maximum memory allocation: **50 MB** per code example
+- Prevents memory exhaustion attacks
+- Memory errors = exec_ok gate failure
+
+**Network Constraints:**
+- **No network access** allowed in sandbox
+- No HTTP requests, API calls, or external connections
+- Isolated environment for security
+- Network attempts = exec_ok gate failure
+
+**File System Constraints:**
+- No file system write access
+- No file uploads or downloads
+- All data must be in-memory
+- File operations = exec_ok gate failure
+
+**Approved Libraries Only:**
+- **core-python:** Built-in Python standard library
+- **numpy:** Numerical computing
+- **pandas:** Data manipulation and analysis
+- **matplotlib:** Data visualization (plotting)
+- **seaborn:** Statistical data visualization
+- **scikit-learn:** Machine learning algorithms
+
+**Library Enforcement:**
+- scope_ok gate rejects content using unapproved libraries
+- Import statements are parsed and validated
+- Common unapproved libraries: requests, urllib, os, sys, subprocess, socket
+- Research Portal must stay within approved library scope
+
+**Execution Validation:**
+- Each runnable code example executed individually
+- Expected output compared to actual output
+- All examples must execute successfully for exec_ok=true
+- One failure = exec_ok gate fails for entire concept
+
+---
+
+## 📚 WEB CITATION ALLOWLIST POLICY
+
+### Approved Citation Sources
+
+**Academic & Educational (Pre-approved):**
+- **docs.python.org** - Official Python documentation (PSF License)
+- **ocw.mit.edu** - MIT OpenCourseWare (CC BY-NC-SA)
+- **www.cmu.edu** - Carnegie Mellon University educational materials
+- **www.credentialingexcellence.org** - Professional credentialing resources
+
+**Community & Reference (Pre-approved):**
+- **realpython.com** - Python tutorials and articles
+- **stackoverflow.com** - Programming Q&A (CC BY-SA)
+- **github.com** - Open source code examples (check individual licenses)
+- **medium.com** - Technical blog posts (check author permissions)
+
+**Citation Requirements:**
+- All citations must include: **source, title, locator, url, license**
+- citation_density gate requires ≥1.0 citations per concept
+- Citations must be accurate, relevant, and properly attributed
+- License compatibility must be verified (prefer open licenses)
+
+### Allowlist Enforcement
+
+**Quality Checker Validation:**
+- Parses citation URLs during validation
+- Checks domain against approved allowlist
+- Non-allowlisted domains trigger review process
+- citation_density gate may fail if citations removed
+
+**Automatic Handling:**
+- **Allowlisted domain:** Citation accepted automatically
+- **Non-allowlisted domain:** Citation flagged for manual review
+- **Flagged citations:** Temporarily removed from citation_density calculation
+- **After review:** Citation restored or permanently rejected
+
+### Escalation Process for New Sources
+
+**Step 1: Quality Checker Detection**
+- Non-allowlisted URL detected in provisional_citations
+- Validation continues but citation flagged in QualityReport
+- Included in QualityReport.issues[] with severity: "warning"
+
+**Step 2: Research Portal Review**
+- Research Portal receives QualityReport with flagged citations
+- Reviews flagged source for quality, relevance, license compatibility
+- Options:
+  - **Remove citation:** Replace with allowlisted source
+  - **Request allowlist addition:** Submit source for approval
+  - **Keep citation:** Accept lower citation_density score
+
+**Step 3: Manual Allowlist Addition (If Requested)**
+- Submit source to Asheesh for approval:
+  - Domain URL
+  - Content type (documentation, tutorial, academic paper, blog)
+  - License information
+  - Relevance to curriculum
+  - Authority/credibility assessment
+- Approval criteria:
+  - Educational value
+  - Technical accuracy
+  - License compatibility (prefer CC BY, CC BY-SA, PSF, MIT)
+  - Trustworthy author/publisher
+- Processing time: 1-3 business days
+- Approved sources added to allowlist (SYSTEM_ARCHITECTURE.md update)
+
+**Step 4: Allowlist Update**
+- New domain added to approved list above
+- Quality Checker configuration updated
+- Future citations from domain auto-approved
+- Research Portal notified of allowlist change
+
+### Citation Quality Standards
+
+**Groundedness & Citation Quality (20 points):**
+- Citations must directly support content claims
+- Prefer primary sources over secondary sources
+- Prefer official documentation over tutorials
+- Prefer academic sources over commercial blogs
+- License compatibility verified (no copyrighted material)
+
+**Penalty for Poor Citations:**
+- Missing citations: -5 points per missing citation
+- Irrelevant citations: -3 points per irrelevant citation
+- Broken URLs: -2 points per broken link
+- License violations: -10 points, auto-fail validation
 
 ---
 
