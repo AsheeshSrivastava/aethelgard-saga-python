@@ -1,0 +1,62 @@
+# Aethelgard Saga Python - Shared Dependencies
+# Version: 2.0 (Production-Grade)
+# Last Updated: November 6, 2025
+
+# Core Framework
+fastapi==0.120.4
+uvicorn[standard]==0.31.0
+pydantic==2.10.3
+pydantic-settings==2.6.1
+
+# AI/ML
+openai>=1.40.0
+langchain==1.0.3
+langchain-community>=0.0.18
+langchain-openai>=0.0.2
+llama-index==0.9.14
+
+# Vector Databases
+lancedb>=0.5.0
+
+# Gradio (for Quality Checker UI)
+gradio==4.44.1
+
+# Database
+supabase>=2.0.0
+psycopg2-binary>=2.9.9
+
+# Authentication & Security
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.6
+
+# HTTP Client
+httpx>=0.27.0
+requests>=2.31.0
+
+# Data Validation
+email-validator>=2.1.0
+
+# Telemetry
+langsmith>=0.1.0
+
+# Testing
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+pytest-cov>=4.1.0
+
+# Code Quality
+black>=24.0.0
+ruff>=0.1.0
+mypy>=1.8.0
+
+# Utilities
+python-dotenv>=1.0.0
+pyyaml>=6.0.1
+rich>=13.7.0
+
+# Critical Constraint
+numpy<2  # MUST use 1.x for compatibility
+
+# Python Version
+# Requires: Python 3.11+
